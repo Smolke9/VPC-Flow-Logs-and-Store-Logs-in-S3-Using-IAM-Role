@@ -1,51 +1,207 @@
-# 🚀 Awesome Project Title
+# Configure VPC Flow Logs and Store Logs in S3 Using IAM Role
 
-![Status](https://img.shields.io/badge/Status-Active-brightgreen)
-![License](https://img.shields.io/badge/License-MIT-blue)
-![Build](https://img.shields.io/badge/Build-Passing-success)
+This project shows how to enable **VPC Flow Logs**, create an **IAM Role** for log delivery, and store all logs securely inside an **S3 bucket**.
+These logs help with **network monitoring**, **security analysis**, and **auditing** within AWS.
 
-## 📌 Overview
+---
 
-This project is designed to demonstrate an elegant and visually
-appealing GitHub README with badges, emojis, and structured sections.
+## 🚀 **Project Overview**
 
-## ✨ Features
+VPC Flow Logs capture detailed information about IP traffic flowing to and from network interfaces within a VPC.
 
--   ⚡ Fast and lightweight\
--   🔧 Easy to configure\
--   📁 Clean project structure\
--   🤝 Open for contributions
+In this project, you will:
 
-## 🛠️ Installation
+* Enable **VPC Flow Logs**
+* Store logs in an **S3 bucket**
+* Create a dedicated IAM role for log delivery
+* Validate logs by generating traffic on EC2
+* Understand the VPC Flow Log structure
 
-``` bash
-git clone https://github.com/yourusername/your-repo.git
-cd your-repo
-npm install
+---
+
+## 🏗 **Architecture Diagram**
+
+```
+EC2 Instances  
+     ↓  
+VPC Flow Logs  
+     ↓  
+IAM Role (Allows S3 PutObject)  
+     ↓  
+S3 Bucket (vpc-flow-logs-bucket)
 ```
 
-## 🚀 Usage
+---
 
-``` bash
-npm start
+## 📁 **Project Structure**
+
+1. **VPC Flow Logs Setup**
+2. **S3 Bucket Configuration**
+3. **IAM Role for Flow Log Delivery**
+4. **Traffic Generation for Testing**
+5. **Flow Log Format Explanation**
+
+---
+
+# 🛠 **1. Configure VPC Flow Logs**
+
+### Steps:
+
+1. Open **AWS Console → VPC**
+2. Go to **Your VPCs**
+3. Select your VPC
+4. Click **Actions → Create Flow Log**
+5. Fill in the following:
+
+   * **Filter:** ALL
+   * **Destination:** S3
+   * **S3 Bucket ARN:**  
+     `arn:aws:s3:::vpc-flow-logs-bucket`
+   * **IAM Role:** `VPCFlowLogsToS3Role`
+   * **Aggregation Interval:** 10 minutes
+
+Logs will be stored at:
+
+```
+s3://vpc-flow-logs-bucket/AWSLogs/<account-id>/vpcflowlogs/<region>/<vpc-id>/
 ```
 
-## 📂 Project Structure
+---
 
-    ├── src/
-    ├── public/
-    ├── package.json
-    └── README.md
+# 🗂 **2. S3 Bucket Configuration**
 
-## 🤝 Contributing
+Create a bucket named:  
+**`vpc-flow-logs-bucket`**
 
-Contributions are always welcome!\
-Please open an issue or submit a pull request.
+Add the following **bucket policy**:
 
-## 📜 License
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": { "Service": "vpc-flow-logs.amazonaws.com" },
+      "Action": "s3:PutObject",
+      "Resource": "arn:aws:s3:::vpc-flow-logs-bucket/*"
+    }
+  ]
+}
+```
 
-This project is licensed under the MIT License.
+---
 
-------------------------------------------------------------------------
+# 🔐 **3. IAM Role for Flow Log Delivery**
 
-⭐ **If you like this project, don't forget to star the repo!**
+### **Trust Policy**
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": { "Service": "vpc-flow-logs.amazonaws.com" },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+```
+
+### **Permissions Policy**
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:PutObject",
+        "s3:PutObjectAcl",
+        "s3:GetBucketAcl",
+        "s3:GetBucketLocation"
+      ],
+      "Resource": [
+        "arn:aws:s3:::vpc-flow-logs-bucket",
+        "arn:aws:s3:::vpc-flow-logs-bucket/*"
+      ]
+    }
+  ]
+}
+```
+
+Role Name: **VPCFlowLogsToS3Role**
+
+---
+
+# 🔎 **4. Verification & Testing**
+
+### Run commands from your EC2 instance:
+
+```bash
+curl google.com
+ping 8.8.8.8
+sudo yum update -y
+```
+
+### Check S3 bucket:
+
+```
+AWSLogs/
+ └── <account-id>/
+      └── vpcflowlogs/
+          └── <region>/
+              └── <vpc-id>/
+                  └── *.txt.gz
+```
+
+Logs should appear within 5–10 minutes.
+
+---
+
+# 🧾 **5. Understanding Flow Log Format**
+
+Example log record:
+
+```
+2 123456789012 eni-0abc12d34ef56 10.0.1.15 142.250.182.206 443 50512 6 10 840 1668522000 1668522060 ACCEPT OK
+```
+
+| Field             | Description       |
+| ----------------- | ----------------- |
+| 2                 | Version           |
+| 123456789012      | AWS Account ID    |
+| eni-0abc12d34ef56 | Network Interface |
+| 10.0.1.15         | Source IP         |
+| 142.250.182.206   | Destination IP    |
+| 443               | Destination Port  |
+| 50512             | Source Port       |
+| 6                 | Protocol (TCP)    |
+| 10                | Packets           |
+| 840               | Bytes             |
+| Time              | Start & End       |
+| ACCEPT            | Action            |
+| OK                | Log Status        |
+
+---
+
+# ✅ **Conclusion**
+
+By completing this project, you have:
+
+✔ Enabled VPC Flow Logs  
+✔ Delivered logs to S3 using IAM Role  
+✔ Understood flow log structure  
+✔ Verified traffic logging using EC2  
+
+This setup improves network visibility, security analysis, and compliance reporting.
+
+---
+
+# 📌 **How to Use This Repository**
+
+1. Clone the repository  
+2. Follow the steps in the README  
+3. Apply the policies and configuration  
+4. Verify logs in S3  
