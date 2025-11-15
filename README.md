@@ -65,6 +65,7 @@ Logs will be stored at:
 ```
 s3://vpc-flow-logs-bucket/AWSLogs/<account-id>/vpcflowlogs/<region>/<vpc-id>/
 ```
+![VPC Flow Logs Setup](./1.jpg)
 
 ---
 
@@ -88,6 +89,7 @@ Add the following **bucket policy**:
   ]
 }
 ```
+![S3 Bucket](./2.jpg)
 
 ---
 
@@ -132,6 +134,7 @@ Add the following **bucket policy**:
 ```
 
 Role Name: **VPCFlowLogsToS3Role**
+![IAM Role](./3.jpg)
 
 ---
 
@@ -144,6 +147,8 @@ curl google.com
 ping 8.8.8.8
 sudo yum update -y
 ```
+![EC2](./4.jpg)
+
 
 ### Check S3 bucket:
 
@@ -185,23 +190,7 @@ Example log record:
 | OK                | Log Status        |
 
 ---
+![Flow Logs in S3](./5.jpg)
 
-# ✅ **Conclusion**
 
-By completing this project, you have:
 
-✔ Enabled VPC Flow Logs  
-✔ Delivered logs to S3 using IAM Role  
-✔ Understood flow log structure  
-✔ Verified traffic logging using EC2  
-
-This setup improves network visibility, security analysis, and compliance reporting.
-
----
-
-# 📌 **How to Use This Repository**
-
-1. Clone the repository  
-2. Follow the steps in the README  
-3. Apply the policies and configuration  
-4. Verify logs in S3  
